@@ -11,7 +11,7 @@ public class PostResponseDto {
     private Integer id;
     private String postTitle;
     private String postDescription;
-    private Integer userName;
+    private String userName;
     private String lastUpdate;
     private String status;
 }
