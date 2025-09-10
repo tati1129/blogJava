@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GeneralResponce <T>{
+public class GeneralResponse<T>{
 
     private HttpStatus code;
     private  T body;

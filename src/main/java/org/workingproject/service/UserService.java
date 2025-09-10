@@ -3,7 +3,7 @@ package org.workingproject.service;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.workingproject.dto.GeneralResponce;
+import org.workingproject.dto.GeneralResponse;
 import org.workingproject.dto.UserRequestDto;
 import org.workingproject.dto.UserResponseDto;
 import org.workingproject.dto.UserUpdateRequestDto;
@@ -11,6 +11,7 @@ import org.workingproject.entity.Role;
 import org.workingproject.entity.User;
 import org.workingproject.repository.UserRepository;
 import org.workingproject.service.util.UserConverter;
+import org.workingproject.service.validation.UserValidation;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,10 +23,23 @@ public class UserService {
 
     private final UserRepository repository;
     private final UserConverter converter;
+    private final UserValidation userValidation;
 
-    public GeneralResponce<UserResponseDto> createUser(UserRequestDto request) {
+    public GeneralResponse<UserResponseDto> createUser(UserRequestDto request) {
 
+        List<String> validationErrors = userValidation.validate(request);
+        if (!validationErrors.isEmpty()) {
+            String errorMessage = "";
+            for (String currentError : validationErrors) {
+                errorMessage = errorMessage + "\n" + currentError ;
+            }
+            return new GeneralResponse<>(HttpStatus.BAD_REQUEST, null, errorMessage);
+        }
 
+        Optional<User> userByEmailOptional = repository.findByEmail(request.getEmail());
+        if(userByEmailOptional.isPresent()) {
+            return new GeneralResponse<>(HttpStatus.BAD_REQUEST, null, "Email already exists");
+        }
 
         User user = converter.fromDto(request);
         user.setRole(Role.USER);
@@ -37,14 +51,14 @@ public class UserService {
         User savedUser = repository.save(user);
 
         UserResponseDto response = converter.toDto(savedUser);
-        return new GeneralResponce<>(HttpStatus.CREATED, response, "User created successfully");
+        return new GeneralResponse<>(HttpStatus.CREATED, response, "User created successfully");
     }
 
-    public GeneralResponce<UserResponseDto> updateUser(UserUpdateRequestDto updateRequest) {
+    public GeneralResponse<UserResponseDto> updateUser(UserUpdateRequestDto updateRequest) {
         Optional<User> userForUpdateOptional = repository.findById(updateRequest.getId());
 
         if (userForUpdateOptional.isEmpty()) {
-            return new GeneralResponce<>(HttpStatus.NOT_FOUND, null, "User not found");
+            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "User not found");
         }
 
         User userForUpdate = userForUpdateOptional.get();
@@ -60,31 +74,31 @@ public class UserService {
         userForUpdate.setLastUpdate(LocalDate.now());
 
         repository.save(userForUpdate);
-        return new GeneralResponce<>(HttpStatus.OK, converter.toDto(userForUpdate), "User updated successfully");
+        return new GeneralResponse<>(HttpStatus.OK, converter.toDto(userForUpdate), "User updated successfully");
     }
 
-    public GeneralResponce<List<User>> getAllUSersAdmin() {
-        return new GeneralResponce<>(HttpStatus.OK, repository.findAll(), "All Users Admin (Administrator mode)");
+    public GeneralResponse<List<User>> getAllUSersAdmin() {
+        return new GeneralResponse<>(HttpStatus.OK, repository.findAll(), "All Users Admin (Administrator mode)");
     }
 
-    public GeneralResponce<List<UserResponseDto>> getAll() {
+    public GeneralResponse<List<UserResponseDto>> getAll() {
 
         List<UserResponseDto> response = repository.findAll().stream()
                 .map(u -> converter.toDto(u))
                 .toList();
 
-        return new GeneralResponce<>(HttpStatus.OK, response, "All Users  (User mode)");
+        return new GeneralResponse<>(HttpStatus.OK, response, "All Users  (User mode)");
     }
 
 
-    public GeneralResponce<UserResponseDto> getUserById(Integer id) {
+    public GeneralResponse<UserResponseDto> getUserById(Integer id) {
         Optional<User> userByIdOptional = repository.findById(id);
         if (userByIdOptional.isPresent()) {
             User userById = userByIdOptional.get();
             UserResponseDto response = converter.toDto(userById);
-            return new GeneralResponce<>(HttpStatus.OK, response, "User founded ");
+            return new GeneralResponse<>(HttpStatus.OK, response, "User founded ");
         } else {
-            return new GeneralResponce<>(HttpStatus.NOT_FOUND, null, "User with id " + id + " not found ");
+            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "User with id " + id + " not found ");
         }
     }
 
@@ -97,19 +111,19 @@ public class UserService {
         }
     }
 
-    public GeneralResponce<UserResponseDto> getUserByEmail(String email) {
+    public GeneralResponse<UserResponseDto> getUserByEmail(String email) {
         Optional<User> userByEmailOptional = repository.findByEmail(email);
 
         if (userByEmailOptional.isPresent()) {
             User userByEmail = userByEmailOptional.get();
             UserResponseDto response = converter.toDto(userByEmail);
-            return new GeneralResponce<>(HttpStatus.OK, response, "User founded ");
+            return new GeneralResponse<>(HttpStatus.OK, response, "User founded ");
         } else {
-            return new GeneralResponce<>(HttpStatus.NOT_FOUND, null, "User with this email " + email + " not found ");
+            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "User with this email " + email + " not found ");
         }
     }
 
-    public GeneralResponce<List<UserResponseDto>> getUserByRole(String role) {
+    public GeneralResponse<List<UserResponseDto>> getUserByRole(String role) {
         List<User> userByRole = repository.findByRole(role);
 
         if (!userByRole.isEmpty()) {
@@ -117,13 +131,13 @@ public class UserService {
                     .map(user -> converter.toDto(user))
                     .toList();
 
-            return new GeneralResponce<>(HttpStatus.OK, response, "Users with role " + role + " successfully found ");
+            return new GeneralResponse<>(HttpStatus.OK, response, "Users with role " + role + " successfully found ");
         } else {
-            return new GeneralResponce<>(HttpStatus.NOT_FOUND, null, "Users with role " + role + " not found ");
+            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "Users with role " + role + " not found ");
         }
     }
 
-    public GeneralResponce<List<UserResponseDto>> getUserByUserName(String userName) {
+    public GeneralResponse<List<UserResponseDto>> getUserByUserName(String userName) {
         List<User> userByName = repository.findByName(userName);
 
         if (!userByName.isEmpty()) {
@@ -131,9 +145,9 @@ public class UserService {
                     .map(u -> converter.toDto(u))
                     .toList();
 
-            return new GeneralResponce<>(HttpStatus.OK, response, "Users founded " + userName);
+            return new GeneralResponse<>(HttpStatus.OK, response, "Users founded " + userName);
         } else {
-            return new GeneralResponce<>(HttpStatus.NOT_FOUND, null, "Users not  found ");
+            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "Users not  found ");
         }
     }
 }
