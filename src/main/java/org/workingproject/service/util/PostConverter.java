@@ -8,6 +8,7 @@ import org.workingproject.entity.PostStatus;
 import org.workingproject.entity.User;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Component
 public class PostConverter {
@@ -29,7 +30,6 @@ public class PostConverter {
         String dateStr = "04.09.2025";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         LocalDate date = LocalDate.parse(dateStr, formatter);
-
          */
 
         post.setStatus(PostStatus.PRIVATE);
@@ -39,16 +39,7 @@ public class PostConverter {
 
     public PostResponseDto toDto(Post post) {
         PostResponseDto dto = new PostResponseDto();
-/*
 
-  private Integer id;
-    private String postTitle;
-    private String postDescription;
-    private Integer userName;
-    private String lastUpdate;
-    private String status;
-
- */
         dto.setId(post.getId());
         dto.setPostTitle(post.getPostTitle());
         dto.setPostDescription(post.getPostDescription());
@@ -57,4 +48,11 @@ public class PostConverter {
         dto.setStatus(post.getStatus().name());
         return dto;
     }
+
+    public List<PostResponseDto> toDtos(List<Post> posts) {
+        return posts.stream()
+                .map(p -> toDto(p))
+                .toList();
+    }
+
 }

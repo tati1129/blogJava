@@ -6,6 +6,9 @@ import org.workingproject.dto.UserRequestDto;
 import org.workingproject.dto.UserResponseDto;
 import org.workingproject.entity.User;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 public class UserConverter {
 
@@ -28,5 +31,9 @@ public class UserConverter {
         dto.setRole(user.getRole().name());
         return dto;
     }
-
+    public List<UserResponseDto> toDtos(List<User> users) {
+        return users.stream()
+                .map(u -> toDto(u))
+                .toList();
+    }
 }

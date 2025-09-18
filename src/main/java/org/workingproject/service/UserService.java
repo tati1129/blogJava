@@ -21,6 +21,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class UserService {
 
+
     private final UserRepository repository;
     private final UserConverter converter;
     private final UserValidation userValidation;
@@ -28,16 +29,17 @@ public class UserService {
     public GeneralResponse<UserResponseDto> createUser(UserRequestDto request) {
 
         List<String> validationErrors = userValidation.validate(request);
+
         if (!validationErrors.isEmpty()) {
             String errorMessage = "";
             for (String currentError : validationErrors) {
-                errorMessage = errorMessage + "\n" + currentError ;
+                errorMessage = errorMessage + "\n" + currentError;
             }
             return new GeneralResponse<>(HttpStatus.BAD_REQUEST, null, errorMessage);
         }
 
         Optional<User> userByEmailOptional = repository.findByEmail(request.getEmail());
-        if(userByEmailOptional.isPresent()) {
+        if (userByEmailOptional.isPresent()) {
             return new GeneralResponse<>(HttpStatus.BAD_REQUEST, null, "Email already exists");
         }
 
@@ -83,11 +85,14 @@ public class UserService {
 
     public GeneralResponse<List<UserResponseDto>> getAll() {
 
-        List<UserResponseDto> response = repository.findAll().stream()
-                .map(u -> converter.toDto(u))
-                .toList();
-
-        return new GeneralResponse<>(HttpStatus.OK, response, "All Users  (User mode)");
+        List<UserResponseDto> response = converter.toDtos(repository.findAll());
+        String message = "";
+        if (response.isEmpty()) {
+            message = "List of users is empty";
+        } else {
+            message = "All Users  (User mode)";
+        }
+        return new GeneralResponse<>(HttpStatus.OK, response, message);
     }
 
 
@@ -124,12 +129,11 @@ public class UserService {
     }
 
     public GeneralResponse<List<UserResponseDto>> getUserByRole(String role) {
-        List<User> userByRole = repository.findByRole(role);
+        Role userRole = Role.valueOf(role);
+        List<User> usersByRole = repository.findByRole(userRole);
 
-        if (!userByRole.isEmpty()) {
-            List<UserResponseDto> response = userByRole.stream()
-                    .map(user -> converter.toDto(user))
-                    .toList();
+        if (!usersByRole.isEmpty()) {
+            List<UserResponseDto> response = converter.toDtos(usersByRole);
 
             return new GeneralResponse<>(HttpStatus.OK, response, "Users with role " + role + " successfully found ");
         } else {
@@ -138,16 +142,25 @@ public class UserService {
     }
 
     public GeneralResponse<List<UserResponseDto>> getUserByUserName(String userName) {
-        List<User> userByName = repository.findByName(userName);
+        List<User> userByName = repository.findByUserName(userName);
 
         if (!userByName.isEmpty()) {
-            List<UserResponseDto> response = userByName.stream()
-                    .map(u -> converter.toDto(u))
-                    .toList();
+            List<UserResponseDto> response = converter.toDtos(userByName);
 
             return new GeneralResponse<>(HttpStatus.OK, response, "Users founded " + userName);
         } else {
             return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "Users not  found ");
         }
+    }
+
+    public GeneralResponse<UserResponseDto> deleteUserById(Integer id) {
+        Optional<User> userForDeleteOptional = repository.findById(id);
+
+        if (userForDeleteOptional.isEmpty()) {
+            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "User with id " + id + " not found ");
+        }
+        repository.deleteById(id);
+
+        return new GeneralResponse<>(HttpStatus.OK, converter.toDto(userForDeleteOptional.get()), "User deleted successfully");
     }
 }

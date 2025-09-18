@@ -17,27 +17,26 @@ public class UserValidation {
     public List<String> validate(UserRequestDto request) {
         List<String> errors = new ArrayList<>();
 
-        if (request ==null){
+        if (request == null){
             errors.add("Request cannot be empty");
         }
-        validateField(errors,request.getEmail(),5);
-        if (!EMAIL_PATTERN.matcher(request.getUserName()).matches()){
-            errors.add("Username contain at list wrong characters ");
-        }
-        if (request.getUserName() ==null || request.getUserName().isBlank()){
-            errors.add("Username cannot be empty");
-        }
-        if (request.getUserName().length()<3){
-            errors.add("Username length cannot be less than 3 characters");
-        }
+        validateField(errors,request.getUserName(),3, "user name");
+
         if (!LATIN_PATTERN.matcher(request.getUserName()).matches()){
             errors.add("Username contain at least wrong characters ");
         }
-        validateField(errors,request.getPassword(),8);
+
+        validateField(errors,request.getEmail(), 5, "Email");
+        if (!EMAIL_PATTERN.matcher(request.getUserName()).matches()){
+            errors.add("Email contain at list wrong characters ");
+        }
+
+
+        validateField(errors,request.getPassword(),8, "Password");
         return errors;
     }
 
-    public void validateField(List<String> errors, String field, int fielLength) {
+    public void validateField(List<String> errors, String field, int fielLength,String fieldName) {
         if (field ==null || field.isBlank()){
             errors.add("Username cannot be empty");
         }

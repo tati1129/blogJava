@@ -2,7 +2,6 @@ package org.workingproject.controller;
 
 
 import lombok.AllArgsConstructor;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.workingproject.dto.GeneralResponse;
@@ -22,33 +21,28 @@ public class UserController {
     private final UserService service;
 
     // Создать пользователя
-    @PostMapping
-public GeneralResponse<UserResponseDto> create(@RequestBody UserRequestDto request){
+    @PostMapping("/newUser")
+    public GeneralResponse<UserResponseDto> create(@RequestBody UserRequestDto request) {
         return service.createUser(request);
     }
 
     // Получить всех пользователей (пользовательский режим)
     @GetMapping("/admin")
-    public GeneralResponse<List<User>> getAllForAdmin(){
+    public GeneralResponse<List<User>> getAllForAdmin() {
         return service.getAllUSersAdmin();
     }
 
     // Получить пользователя по id
     @GetMapping("/{id}")
-    public GeneralResponse<UserResponseDto> getById(@PathVariable Integer id){
+    public GeneralResponse<UserResponseDto> getById(@PathVariable Integer id) {
         return service.getUserById(id);
     }
 
     // Обновить пользователя по id (на основе данных из UserUpdateRequestDto)
     @PutMapping("/{id}")
-    public GeneralResponse<UserResponseDto> update(@RequestBody UserUpdateRequestDto updateRequest){
+    public GeneralResponse<UserResponseDto> update(@RequestBody UserUpdateRequestDto updateRequest) {
         return service.updateUser(updateRequest);
     }
-
-
-    // найти пользователя по email
-    // /api/users?email=...
-    // /api/users?username=...
 
     @GetMapping()
     public GeneralResponse<List<UserResponseDto>> getAllUsersByParameter(
@@ -60,16 +54,21 @@ public GeneralResponse<UserResponseDto> create(@RequestBody UserRequestDto reque
         if (role != null && !role.isBlank()) {
             return service.getUserByRole(role);
         }
-        if (username != null && !username.isBlank()){
+        if (username != null && !username.isBlank()) {
             return service.getUserByUserName(username);
         }
-        if (email != null && !email.isBlank()){
-            UserResponseDto user =   service.getUserByEmail(email).getBody();
-            return  new GeneralResponse<>(HttpStatus.OK,List.of(user),"Found by email");
+        if (email != null && !email.isBlank()) {
+            UserResponseDto user = service.getUserByEmail(email).getBody();
+            return new GeneralResponse<>(HttpStatus.OK, List.of(user), "Found by email");
         }
 
         return service.getAll();
 
+    }
+
+    @DeleteMapping("/{id}")
+    public GeneralResponse<UserResponseDto> deleteUser(@PathVariable Integer id) {
+        return service.deleteUserById(id);
     }
 
 }

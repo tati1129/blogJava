@@ -1,24 +1,17 @@
 package org.workingproject.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.workingproject.entity.Role;
 import org.workingproject.entity.User;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface UserRepository {
-    User save(User user);
-
-    User updateUser(User user);
-
-    Optional<User> deleteById(Integer id);
-
-    List<User> findAll();
-
-    Optional<User> findById(Integer id);
+public interface UserRepository extends JpaRepository<User,Integer> {
 
     Optional<User> findByEmail(String email);
 
-    List<User> findByRole(String role);
+    List<User> findByRole(Role role);
 
-    List<User> findByName(String username);
+    List<User> findByUserName(String username);
 }

@@ -1,25 +1,19 @@
 package org.workingproject.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.workingproject.entity.Post;
 import org.workingproject.entity.User;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface PostRepository {
-    Post save(Post post);
-
-    Post update(Post post);
-
-    Optional<Post> deletePostById(Integer id);
-
-    List<Post> findAll();
-
-    Optional<Post> findPostById(Integer id);
+public interface PostRepository extends JpaRepository<Post, Integer> {
 
     List<Post> findPostByUser(User user);
-    List<Post> findByPostNameContent(String postName);
-    List<Post> findPostByTitle(String title);
 
-    Optional<Post> changeStatus(Post post);
+    List<Post> findByPostTitleContainingIgnoreCase(String postTitle);
+
+    Optional<Post> findPostById(Integer postId);
+
+
 }
