@@ -28,7 +28,7 @@ public class UserConverter {
         dto.setId(user.getId());
         dto.setUserName(user.getUserName());
         dto.setEmail(user.getEmail());
-        dto.setRole(user.getRole().name());
+        dto.setRole(user.getRole().getRoleName());
         return dto;
     }
     public List<UserResponseDto> toDtos(List<User> users) {

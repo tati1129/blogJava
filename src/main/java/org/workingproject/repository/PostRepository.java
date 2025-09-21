@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Integer> {
 
+    Optional<Post> deletePostById(int id);
     List<Post> findPostByUser(User user);
 
     List<Post> findByPostTitleContainingIgnoreCase(String postTitle);

@@ -1,8 +1,10 @@
 package org.workingproject.controller;
 
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.workingproject.dto.GeneralResponse;
 import org.workingproject.dto.UserRequestDto;
@@ -22,30 +24,30 @@ public class UserController {
 
     // Создать пользователя
     @PostMapping("/newUser")
-    public GeneralResponse<UserResponseDto> create(@RequestBody UserRequestDto request) {
-        return service.createUser(request);
+    public ResponseEntity<UserResponseDto> create(@Valid @RequestBody UserRequestDto request) {
+        return new ResponseEntity<>(service.createUser(request), HttpStatus.CREATED);
     }
 
     // Получить всех пользователей (пользовательский режим)
     @GetMapping("/admin")
-    public GeneralResponse<List<User>> getAllForAdmin() {
-        return service.getAllUSersAdmin();
+    public ResponseEntity<List<User>> getAllForAdmin() {
+        return ResponseEntity.ok(service.getAllUSersAdmin());
     }
 
     // Получить пользователя по id
     @GetMapping("/{id}")
-    public GeneralResponse<UserResponseDto> getById(@PathVariable Integer id) {
+    public UserResponseDto getById(@PathVariable Integer id) {
         return service.getUserById(id);
     }
 
     // Обновить пользователя по id (на основе данных из UserUpdateRequestDto)
     @PutMapping("/{id}")
-    public GeneralResponse<UserResponseDto> update(@RequestBody UserUpdateRequestDto updateRequest) {
+    public UserResponseDto update(@RequestBody UserUpdateRequestDto updateRequest) {
         return service.updateUser(updateRequest);
     }
 
     @GetMapping()
-    public GeneralResponse<List<UserResponseDto>> getAllUsersByParameter(
+    public List<UserResponseDto> getAllUsersByParameter(
             @RequestParam(value = "role", required = false) String role,
             @RequestParam(value = "username", required = false) String username,
             @RequestParam(value = "email", required = false) String email
@@ -58,8 +60,8 @@ public class UserController {
             return service.getUserByUserName(username);
         }
         if (email != null && !email.isBlank()) {
-            UserResponseDto user = service.getUserByEmail(email).getBody();
-            return new GeneralResponse<>(HttpStatus.OK, List.of(user), "Found by email");
+            UserResponseDto user = service.getUserByEmail(email);
+            return List.of(user);
         }
 
         return service.getAll();
@@ -67,7 +69,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public GeneralResponse<UserResponseDto> deleteUser(@PathVariable Integer id) {
+    public UserResponseDto deleteUser(@PathVariable Integer id) {
         return service.deleteUserById(id);
     }
 

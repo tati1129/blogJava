@@ -18,19 +18,19 @@ public class PostController {
 
     //найти все посты users mode where Status == Public
     @GetMapping()
-    public GeneralResponse<List<PostResponseDto>> getAllPostsUserMode() {
+    public List<PostResponseDto> getAllPostsUserMode() {
         return service.getAllPostsUserMode();
     }
 
     //найти все посты users mode where Status == Public
     @GetMapping("/admin")
-    public GeneralResponse<List<PostResponseDto>> getAllPostsAdminMode() {
+    public List<PostResponseDto> getAllPostsAdminMode() {
         return service.getAllPostsAdmin();
     }
 
     //Созд пост
     @PostMapping("/newPost")
-    public GeneralResponse<PostResponseDto> createPost(@RequestBody PostRequestDto request) {
+    public PostResponseDto createPost(@RequestBody PostRequestDto request) {
         return service.createPost(request);
     }
 
@@ -44,25 +44,25 @@ public class PostController {
 
     //все посты юзера
     @GetMapping("/user/{userId}")
-    public GeneralResponse<List<PostResponseDto>> getPostByUser(@PathVariable Integer userId) {
+    public List<PostResponseDto> getPostByUser(@PathVariable Integer userId) {
         return service.getAllPostsUser(userId);
     }
 
     //найти пост по id поста
     @GetMapping("/{id}")
-    public GeneralResponse<PostResponseDto> getPostById(@PathVariable Integer id) {
+    public PostResponseDto getPostById(@PathVariable Integer id) {
         return service.getPostById(id);
     }
 
     //найти все посты, содержащие в названии контента
     @GetMapping("/contex")
-    public GeneralResponse<List<PostResponseDto>> getAllPostByContext(@RequestParam String searchText) {
+    public List<PostResponseDto> getAllPostByContext(@RequestParam String searchText) {
         return service.getPostByTaskNameContent(searchText);
     }
 
     //обновить статус поста
     @PostMapping("/{taskId}/status")
-    public GeneralResponse<String> updatePostStatus(@PathVariable Integer taskId, @RequestBody StatusUpdateRequest dto) {
+    public String updatePostStatus(@PathVariable Integer taskId, @RequestBody StatusUpdateRequest dto) {
         return service.updatePostStatus(taskId, dto);
     }
 }

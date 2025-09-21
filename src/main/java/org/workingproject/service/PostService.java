@@ -1,7 +1,6 @@
 package org.workingproject.service;
 
 import lombok.AllArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.workingproject.dto.GeneralResponse;
@@ -12,6 +11,7 @@ import org.workingproject.entity.Post;
 import org.workingproject.entity.PostStatus;
 import org.workingproject.entity.User;
 import org.workingproject.repository.PostRepository;
+import org.workingproject.service.exceptions.NotFoundException;
 import org.workingproject.service.util.PostConverter;
 
 import java.time.LocalDate;
@@ -26,10 +26,10 @@ public class PostService {
     private final UserService service;
     private final PostConverter converter;
 
-    public GeneralResponse<PostResponseDto> createPost(PostRequestDto requestDto) {
+    public PostResponseDto createPost(PostRequestDto requestDto) {
         Optional<User> postUserOptional = service.getUserByIdForPostService(requestDto.getUserId());
         if (postUserOptional.isEmpty()) {
-            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "Невозможно создать задачу для незарегистрированного пользователя. User with this id not found");
+           throw new NotFoundException("User with this id not found");
         }
 
         User postUser = postUserOptional.get();
@@ -46,81 +46,83 @@ public class PostService {
         //postUser.getPosts().add(post);//в список постов добавляем новый пост
         postUser.addPost(savedPost);//с помощью хелпера из entity User
 
-        return new GeneralResponse<>(HttpStatus.CREATED, converter.toDto(savedPost), "Newpost added successfully");
+        return converter.toDto(savedPost);
 
     }
 
 
-    public GeneralResponse<String> updatePostStatus(Integer id, StatusUpdateRequest request) {
+    public String updatePostStatus(Integer id, StatusUpdateRequest request) {
         Optional<Post> postByIdOptional = repository.findById(id);
         if (postByIdOptional.isEmpty()) {
-            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "Post with this id " + id + " not found");
+            throw  new NotFoundException("Post with this id not found");
         } else {
             PostStatus newStatus = PostStatus.valueOf(request.getStatus());
             Post post = postByIdOptional.get();
             post.setStatus(newStatus);
             repository.save(post);
-            return new GeneralResponse<>(HttpStatus.OK, "Status was  successfully changed", "Post deleted successfully");
+            return "Status was  successfully changed";
         }
 
     }
 
-//
-//    public PostResponseDto deletePostById(Integer id) {
-//        Optional<Post> postByIdOptional = repository.deletePostById(id);
-//
-//        if (postByIdOptional.isEmpty()) {
-//            throw new ChangeSetPersister.NotFoundException("Post with this id " + id + " not found");
-//        } else {
-//            return converter.toDto(postByIdOptional.get());
-//        }
-//    }
 
-    public GeneralResponse<List<PostResponseDto>> getAllPostsAdmin() {
-        List<Post> allPosts = repository.findAll();
-        List<PostResponseDto> responses = converter.toDtos(allPosts);
-        return new GeneralResponse<>(HttpStatus.OK, responses, "All posts (admin mode)");
+    public PostResponseDto deletePostById(Integer id) {
+        Optional<Post> postByIdOptional = repository.deletePostById(id);
+
+        if (postByIdOptional.isEmpty()) {
+            throw new NotFoundException("Post with this id " + id + " not found");
+        } else {
+            return converter.toDto(postByIdOptional.get());
+        }
     }
 
-    public GeneralResponse<List<PostResponseDto>> getAllPostsUserMode() {
+    public List<PostResponseDto> getAllPostsAdmin() {
+        List<Post> allPosts = repository.findAll();
+        List<PostResponseDto> response = converter.toDtos(allPosts);
+        return  response;
+    }
+
+    public List<PostResponseDto> getAllPostsUserMode() {
         List<Post> allPosts = repository.findAll().stream()
                 .filter(p -> p.getStatus() == PostStatus.PUBLIC)
                 .toList();
         List<PostResponseDto> responses = converter.toDtos(allPosts);
-        return new GeneralResponse<>(HttpStatus.OK, responses, "All posts (user mode)");
+        return responses;
     }
 
-    public GeneralResponse<List<PostResponseDto>> getAllPostsUser(Integer id) {
+    public List<PostResponseDto> getAllPostsUser(Integer id) {
         Optional<User> userByIdOptional = service.getUserByIdForPostService(id);
 
         if (userByIdOptional.isEmpty()) {
-            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "User with this id not found");
+            throw new NotFoundException("User with this id not found");
 
         } else {
-            List<Post> allPostByUSer = repository.findPostByUser(userByIdOptional.get());
+        //        List<Post> allPostByUSer = repository.findPostByUser(userByIdOptional.get());
 
+            //достаем из базы, 2й вариант
+            List<Post> allPostByUSer = userByIdOptional.get().getPosts();
             List<PostResponseDto> response = converter.toDtos(allPostByUSer);
-            return new GeneralResponse<>(HttpStatus.OK, response, "All posts (user mode)");
+            return response;
         }
     }
 
-    public GeneralResponse<PostResponseDto> getPostById(Integer postId) {
+    public PostResponseDto getPostById(Integer postId) {
         Optional<Post> postByIdOPtional = repository.findPostById(postId);
 
         if (postByIdOPtional.isEmpty()) {
-            return new GeneralResponse<>(HttpStatus.NOT_FOUND, null, "Post with this id not found");
+           throw  new NotFoundException("Post with this id not found");
         } else {
-            return new GeneralResponse<>(HttpStatus.OK, converter.toDto(postByIdOPtional.get()), "Post found successfully");
+            return  converter.toDto(postByIdOPtional.get());
         }
     }
 
-    public GeneralResponse<List<PostResponseDto>> getPostByTaskNameContent(String postName) {
+    public List<PostResponseDto> getPostByTaskNameContent(String postName) {
 
         List<Post> postsByTaskName = repository.findByPostTitleContainingIgnoreCase(postName);
 
         List<PostResponseDto> response = postsByTaskName.stream().map(task -> converter.toDto(task)).toList();
 
-        return new GeneralResponse<>(HttpStatus.OK, response, "All posts including in name " + postName);
+       return response;
     }
 
 }

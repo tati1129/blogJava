@@ -1,9 +1,14 @@
 package org.workingproject.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.workingproject.annotation.OurValidation;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,12 +24,23 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @NotBlank
     private String userName;
+
+    @NotBlank
+    @Email
     private String email;
+
+//    @NotBlank
+//     @Size(min = 3, max = 15)
+//    @Pattern(regexp = "^[A-Za-z0-9]+$")
+    @OurValidation(message = "Password does not meet security requirements")
     private String password;
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    public Role role;
+
     @OneToMany(mappedBy = "user", cascade =CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
     private LocalDate createDate;
